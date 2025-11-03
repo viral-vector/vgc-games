@@ -1,0 +1,14 @@
+name: CI Placeholder
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pending pipeline implementation
+        run: echo "CI workflow to be implemented"
