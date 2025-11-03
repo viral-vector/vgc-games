@@ -11,6 +11,7 @@ import {
   getSpawnDelay,
   type DifficultyState
 } from '../game/difficulty';
+import { trackError, trackEvent } from '../analytics';
 
 enum RunnerState {
   Waiting,
@@ -54,6 +55,7 @@ export class MainScene extends Phaser.Scene {
   create(): void {
     this.unregisterAds = registerAdSceneEvents(this);
     this.events.on('ad.rewarded.reward', this.handleAdReward, this);
+    this.events.on('ad.rewarded.opened', this.handleAdOpened, this);
 
     this.physics.world.setBounds(0, 0, 800, 600);
 
@@ -239,6 +241,7 @@ export class MainScene extends Phaser.Scene {
     this.resetRun();
     this.setState(RunnerState.Running);
     this.setStatus('Jump over obstacles! Double jump to recover.');
+    trackEvent('run_started', { placement_id: 'runner-level-start' });
   }
 
   private resetRun(): void {
@@ -293,12 +296,14 @@ export class MainScene extends Phaser.Scene {
     this.stopRun();
     this.player.setTint(0xe63946);
 
+    const normalizedScore = Math.floor(this.score);
     this.bestScore = Math.max(this.bestScore, this.score);
 
     this.updateScoreTexts();
 
     this.setState(RunnerState.GameOver);
     this.setStatus('Crashed! Watch an ad to revive and try again.');
+    trackEvent('run_crashed', { score: normalizedScore });
 
     void this.presentEndAd();
   }
@@ -318,6 +323,7 @@ export class MainScene extends Phaser.Scene {
     this.setState(RunnerState.ShowingAd);
     this.setStatus('Thanks to our sponsor! Watch the ad to continue.');
     await this.safeShowRewardedAd('runner-level-end');
+    trackEvent('run_revived', { placement_id: 'runner-level-end' });
     this.player.clearTint();
     this.setState(RunnerState.Waiting);
     this.setStatus('Tap or press SPACE to start the next run.');
@@ -326,8 +332,13 @@ export class MainScene extends Phaser.Scene {
   private async safeShowRewardedAd(placementId: string): Promise<void> {
     try {
       await showRewardedVideo({ placementId });
+      trackEvent('ad_shown', { placement_id: placementId });
     } catch (error) {
       console.warn('Failed to display rewarded ad', error);
+      trackError('ad_failed', {
+        placement_id: placementId,
+        message: error instanceof Error ? error.message : 'unknown'
+      });
     }
   }
 
@@ -340,6 +351,11 @@ export class MainScene extends Phaser.Scene {
     this.score += bonus;
     this.updateScoreTexts();
     this.flashReward(`+${bonus} ${payload.reward.type}`);
+    trackEvent('reward_claimed', {
+      amount: bonus,
+      reward_type: payload.reward?.type,
+      placement_id: payload.placementId
+    });
   }
 
   private flashReward(message: string): void {
@@ -375,9 +391,14 @@ export class MainScene extends Phaser.Scene {
   private cleanup(): void {
     this.unregisterAds?.();
     this.events.off('ad.rewarded.reward', this.handleAdReward, this);
+    this.events.off('ad.rewarded.opened', this.handleAdOpened, this);
     this.input.keyboard?.off('keydown-SPACE', this.handleKeyDown, this);
     this.input.keyboard?.off('keydown-UP', this.handleKeyDown, this);
     this.input.off('pointerdown', this.handlePointerDown, this);
     this.spawnTimer?.remove();
+  }
+
+  private handleAdOpened({ placementId }: { placementId?: string }): void {
+    trackEvent('ad_opened', { placement_id: placementId });
   }
 }
