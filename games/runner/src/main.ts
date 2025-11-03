@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { initializeAnalytics } from './analytics';
 import { MainScene } from './scenes/MainScene';
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -16,5 +17,7 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   scene: [MainScene]
 };
+
+initializeAnalytics();
 
 new Phaser.Game(config);

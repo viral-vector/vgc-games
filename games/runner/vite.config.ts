@@ -13,5 +13,20 @@ export default defineConfig({
   },
   server: {
     open: true
+  },
+  build: {
+    manifest: true,
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        chunkFileNames: 'assets/[name].[hash].js',
+        entryFileNames: 'assets/[name].[hash].js',
+        assetFileNames: ({ name }) => {
+          const parts = name?.split('.') ?? [];
+          const ext = parts.length > 1 ? parts.pop() : 'asset';
+          return `assets/[name].[hash].${ext}`;
+        }
+      }
+    }
   }
 });
