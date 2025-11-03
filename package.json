@@ -9,5 +9,12 @@
   "workspaces": [
     "games/*",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "process-art": "node scripts/process-art.js"
+  },
+  "devDependencies": {
+    "commander": "^11.1.0",
+    "sharp": "^0.32.6"
+  }
 }
