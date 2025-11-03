@@ -1,0 +1,24 @@
+{
+  "name": "@vgc/ad-service",
+  "version": "0.1.0",
+  "description": "Ad provider wrapper and Phaser integration helpers for VGC games",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1"
+  },
+  "peerDependencies": {
+    "phaser": "^3.60.0"
+  },
+  "devDependencies": {
+    "phaser": "^3.60.0",
+    "typescript": "^5.3.3"
+  }
+}
